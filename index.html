@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TraceTable</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7f5;
+            color: #1a1a1a;
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            padding: 0 32px;
+            height: 56px;
+            background: #ffffff;
+            border-bottom: 1px solid #e0e5e0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: #16a34a;
+            letter-spacing: -0.5px;
+        }
+        .logo span { color: #1a1a1a; font-weight: 400; }
+        .nav-links { display: flex; gap: 24px; }
+        .nav-links a {
+            color: #888;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 16px 0;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .nav-links a:hover { color: #555; }
+        .nav-links a.active {
+            color: #16a34a;
+            border-bottom-color: #16a34a;
+        }
+
+        /* Views */
+        .view { display: none; }
+        .view.active { display: block; }
+
+        /* Landing Page */
+        .hero {
+            text-align: center;
+            padding: 100px 32px 60px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #16a34a, #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero p {
+            font-size: 18px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+        .cta-btn {
+            display: inline-block;
+            padding: 14px 32px;
+            background: #16a34a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .cta-btn:hover { background: #15803d; }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 32px 80px;
+        }
+        .feature-card {
+            background: #ffffff;
+            border: 1px solid #e0e5e0;
+            border-radius: 12px;
+            padding: 32px;
+        }
+        .feature-card h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
+        .feature-card p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: #ecfdf5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+
+        /* Dashboard */
+        .dashboard {
+            padding: 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .dash-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .dash-header h2 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .search-bar input {
+            padding: 10px 16px;
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            color: #1a1a1a;
+            font-size: 14px;
+            width: 280px;
+            outline: none;
+        }
+        .search-bar input:focus { border-color: #16a34a; }
+        .search-bar input::placeholder { color: #9ca3af; }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #ffffff;
+            border: 1px solid #e0e5e0;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .stat-card .label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .stat-card .value.green { color: #16a34a; }
+        .stat-card .value.yellow { color: #d97706; }
+        .stat-card .value.red { color: #dc2626; }
+        .stat-card .value.blue { color: #16a34a; }
+
+        /* Table */
+        .table-container {
+            background: #ffffff;
+            border: 1px solid #e0e5e0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        thead {
+            background: #f9fafb;
+        }
+        th {
+            text-align: left;
+            padding: 14px 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        td {
+            padding: 16px 20px;
+            font-size: 14px;
+            border-top: 1px solid #f0f0f0;
+        }
+        tr:hover td { background: #f9fdf9; }
+        .supplier-name {
+            font-weight: 600;
+            color: #16a34a;
+            cursor: pointer;
+        }
+        .supplier-name:hover { text-decoration: underline; }
+        .location-tag {
+            display: inline-block;
+            padding: 3px 10px;
+            background: #f3f4f6;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #555;
+            margin: 2px 4px 2px 0;
+        }
+        .cert-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .cert-badge.valid { background: #dcfce7; color: #16a34a; }
+        .cert-badge.expiring { background: #fef3c7; color: #d97706; }
+        .cert-badge.expired { background: #fee2e2; color: #dc2626; }
+        .delivery-date { color: #888; }
+
+        /* Detail Panel */
+        .detail-overlay {
+            display: none;
+            position: fixed;
+            top: 0; right: 0; bottom: 0; left: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+        .detail-overlay.active { display: flex; justify-content: flex-end; }
+        .detail-panel {
+            width: 480px;
+            background: #ffffff;
+            border-left: 1px solid #e0e5e0;
+            padding: 32px;
+            overflow-y: auto;
+            animation: slideIn 0.2s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        .detail-panel h3 {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        .detail-panel .subtitle {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        .detail-section {
+            margin-bottom: 24px;
+        }
+        .detail-section h4 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #888;
+            margin-bottom: 12px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+        .detail-row .label { color: #888; }
+        .close-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Compliance */
+        .compliance {
+            padding: 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .compliance h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .compliance .subhead {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+        .timeline {
+            position: relative;
+            padding-left: 32px;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e0e5e0;
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 24px;
+            padding: 20px;
+            background: #ffffff;
+            border: 1px solid #e0e5e0;
+            border-radius: 10px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -28px;
+            top: 24px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid #e0e5e0;
+            background: #f5f7f5;
+        }
+        .timeline-item.complete::before { background: #16a34a; border-color: #16a34a; }
+        .timeline-item.warning::before { background: #d97706; border-color: #d97706; }
+        .timeline-item.overdue::before { background: #dc2626; border-color: #dc2626; }
+        .timeline-item .date {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 6px;
+        }
+        .timeline-item .title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .timeline-item .desc {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.4;
+        }
+        .generate-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #ecfdf5;
+            border: 1px solid #d1fae5;
+            border-radius: 8px;
+            color: #16a34a;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 24px;
+        }
+        .generate-btn:hover { background: #d1fae5; }
+
+        /* Loading */
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 60px;
+        }
+        .loader.active { display: block; }
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid #e0e5e0;
+            border-top-color: #16a34a;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loader p { color: #888; font-size: 14px; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 32px; }
+            .features { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .detail-panel { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="logo">Trace<span>Table</span></div>
+    <div class="nav-links">
+        <a class="active" onclick="showView('landing')">Home</a>
+        <a onclick="showView('dashboard')">Dashboard</a>
+        <a onclick="showView('compliance')">Compliance</a>
+    </div>
+</nav>
+
+<!-- Landing -->
+<div id="landing" class="view active">
+    <div class="hero">
+        <h1>Know where every ingredient comes from.</h1>
+        <p>TraceTable gives restaurants full supply chain visibility. Track suppliers, monitor certifications, and generate compliance reports. From sea to table, every step documented.</p>
+        <button class="cta-btn" onclick="showView('dashboard')">See the Dashboard</button>
+    </div>
+    <div class="features">
+        <div class="feature-card">
+            <div class="feature-icon">&#x1f4e6;</div>
+            <h3>Supplier Tracking</h3>
+            <p>Log every supplier with locations, certifications, and delivery history. See your entire supply chain in one view.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">&#x1f6e1;</div>
+            <h3>Certification Monitoring</h3>
+            <p>Track FDA, USDA, and MSC certifications with automatic expiration alerts. Never get caught with a lapsed cert.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">&#x1f4cb;</div>
+            <h3>Compliance Reports</h3>
+            <p>Generate audit-ready traceability reports on demand. One click from supply chain to compliance documentation.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard" class="view">
+    <div class="dashboard">
+        <div class="dash-header">
+            <h2>Supplier Dashboard</h2>
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search suppliers, locations, certifications..." oninput="filterTable()">
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="label">Active Suppliers</div>
+                <div class="value blue" id="statSuppliers">8</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Certs Valid</div>
+                <div class="value green" id="statValid">5</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Expiring (30d)</div>
+                <div class="value yellow" id="statExpiring">2</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Expired</div>
+                <div class="value red" id="statExpired">1</div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Supplier</th>
+                        <th>Locations</th>
+                        <th>Certification</th>
+                        <th>Cert Expires</th>
+                        <th>Last Delivery</th>
+                    </tr>
+                </thead>
+                <tbody id="supplierTable"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Compliance -->
+<div id="compliance" class="view">
+    <div class="compliance">
+        <h2>Compliance Timeline</h2>
+        <p class="subhead">Certification events, deliveries, and audit milestones for Sakura Sushi, Cambridge MA</p>
+
+        <div class="timeline">
+            <div class="timeline-item complete">
+                <div class="date">March 27, 2026</div>
+                <div class="title">Delivery received: Tsukiji Direct</div>
+                <div class="desc">12 lbs bluefin tuna, 8 lbs yellowtail. Chain of custody verified: Tsukiji Market > NRT cold storage > Logan Airport > Sakura Sushi. Temp log: 31-33F continuous.</div>
+            </div>
+            <div class="timeline-item complete">
+                <div class="date">March 25, 2026</div>
+                <div class="title">Delivery received: Harbor Fish Market</div>
+                <div class="desc">6 lbs Atlantic salmon, 4 lbs sea scallops. Origin: Portland, ME. Transport time: 2.5 hours. Received at 34F.</div>
+            </div>
+            <div class="timeline-item warning">
+                <div class="date">March 22, 2026</div>
+                <div class="title">Certification expiring: New England Shellfish Co.</div>
+                <div class="desc">Interstate Shellfish Dealer certification expires April 15, 2026. Renewal application recommended within 14 days.</div>
+            </div>
+            <div class="timeline-item complete">
+                <div class="date">March 20, 2026</div>
+                <div class="title">Delivery received: Valley Fresh Farms</div>
+                <div class="desc">Mixed produce order: avocados (24), cucumbers (36), scallions (12 bunches). USDA Organic certified. Temp log: 38-40F.</div>
+            </div>
+            <div class="timeline-item overdue">
+                <div class="date">March 15, 2026</div>
+                <div class="title">Certification expired: Bay State Rice Distributors</div>
+                <div class="desc">GFSI certification expired. Supplier notified on March 1. Awaiting renewal documentation. Consider backup supplier for short-grain rice.</div>
+            </div>
+            <div class="timeline-item complete">
+                <div class="date">March 12, 2026</div>
+                <div class="title">Quarterly audit completed</div>
+                <div class="desc">All supplier documentation reviewed. 7 of 8 suppliers fully compliant. 1 pending certification renewal (Bay State Rice). Report filed with Cambridge Health Department.</div>
+            </div>
+            <div class="timeline-item complete">
+                <div class="date">March 8, 2026</div>
+                <div class="title">New supplier onboarded: Miyagi Nori Farm</div>
+                <div class="desc">Organic nori sheets and wakame. JAS Organic certified through December 2026. First delivery scheduled March 14.</div>
+            </div>
+        </div>
+
+        <button class="generate-btn" onclick="generateReport()">Generate Compliance Report (PDF)</button>
+    </div>
+</div>
+
+<!-- Detail Panel -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail(event)">
+    <div class="detail-panel" id="detailPanel"></div>
+</div>
+
+<script>
+    // Supplier data
+    const suppliers = [
+        {
+            name: "Harbor Fish Market",
+            locations: ["Portland, ME", "Boston, MA"],
+            cert: "FDA Registered",
+            certStatus: "valid",
+            certExpires: "2027-01-15",
+            lastDelivery: "2026-03-25",
+            products: ["Atlantic salmon", "Sea scallops", "Haddock", "Cod"],
+            contact: "Mike Hayes, (207) 775-0251",
+            avgDeliveryDays: 1,
+            totalOrders: 47
+        },
+        {
+            name: "Valley Fresh Farms",
+            locations: ["Salinas, CA", "Watsonville, CA"],
+            cert: "USDA Organic",
+            certStatus: "valid",
+            certExpires: "2026-11-30",
+            lastDelivery: "2026-03-20",
+            products: ["Avocados", "Cucumbers", "Scallions", "Microgreens"],
+            contact: "Maria Santos, (831) 422-8800",
+            avgDeliveryDays: 3,
+            totalOrders: 52
+        },
+        {
+            name: "Tsukiji Direct",
+            locations: ["Tokyo, JP"],
+            cert: "MSC Certified",
+            certStatus: "valid",
+            certExpires: "2026-09-01",
+            lastDelivery: "2026-03-27",
+            products: ["Bluefin tuna", "Yellowtail", "Uni", "Ikura"],
+            contact: "Kenji Tanaka, +81-3-6264-5220",
+            avgDeliveryDays: 4,
+            totalOrders: 31
+        },
+        {
+            name: "New England Shellfish Co.",
+            locations: ["Wellfleet, MA", "Duxbury, MA"],
+            cert: "Interstate Shellfish Dealer",
+            certStatus: "expiring",
+            certExpires: "2026-04-15",
+            lastDelivery: "2026-03-18",
+            products: ["Oysters", "Littleneck clams", "Mussels"],
+            contact: "Tom Brewer, (508) 349-3154",
+            avgDeliveryDays: 1,
+            totalOrders: 38
+        },
+        {
+            name: "Bay State Rice Distributors",
+            locations: ["Worcester, MA"],
+            cert: "GFSI Certified",
+            certStatus: "expired",
+            certExpires: "2026-03-15",
+            lastDelivery: "2026-03-10",
+            products: ["Short-grain sushi rice", "Brown rice", "Rice vinegar"],
+            contact: "Alan Park, (508) 791-4422",
+            avgDeliveryDays: 2,
+            totalOrders: 24
+        },
+        {
+            name: "Miyagi Nori Farm",
+            locations: ["Sendai, JP"],
+            cert: "JAS Organic",
+            certStatus: "valid",
+            certExpires: "2026-12-31",
+            lastDelivery: "2026-03-14",
+            products: ["Nori sheets", "Wakame", "Kombu"],
+            contact: "Yuki Saito, +81-22-222-3180",
+            avgDeliveryDays: 7,
+            totalOrders: 6
+        },
+        {
+            name: "Green Mountain Soy",
+            locations: ["Brattleboro, VT"],
+            cert: "USDA Organic",
+            certStatus: "expiring",
+            certExpires: "2026-04-22",
+            lastDelivery: "2026-03-22",
+            products: ["Organic tofu", "Edamame", "Soy sauce"],
+            contact: "Lisa Chen, (802) 257-1001",
+            avgDeliveryDays: 2,
+            totalOrders: 29
+        },
+        {
+            name: "Atlantic Wasabi",
+            locations: ["Half Moon Bay, CA"],
+            cert: "FDA Registered",
+            certStatus: "valid",
+            certExpires: "2027-06-01",
+            lastDelivery: "2026-03-19",
+            products: ["Fresh wasabi root", "Wasabi paste"],
+            contact: "Derek Yamamoto, (650) 726-3300",
+            avgDeliveryDays: 3,
+            totalOrders: 15
+        }
+    ];
+
+    // Render table
+    function renderTable(data) {
+        const tbody = document.getElementById('supplierTable');
+        tbody.innerHTML = data.map(s => `
+            <tr>
+                <td><span class="supplier-name" onclick="showDetail('${s.name}')">${s.name}</span></td>
+                <td>${s.locations.map(l => `<span class="location-tag">${l}</span>`).join('')}</td>
+                <td><span class="cert-badge ${s.certStatus}">${s.cert}</span></td>
+                <td class="${s.certStatus === 'expired' ? 'value red' : s.certStatus === 'expiring' ? 'value yellow' : 'delivery-date'}">${formatDate(s.certExpires)}</td>
+                <td class="delivery-date">${formatDate(s.lastDelivery)}</td>
+            </tr>
+        `).join('');
+    }
+
+    function formatDate(dateStr) {
+        const d = new Date(dateStr + 'T00:00:00');
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    // Search
+    function filterTable() {
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = suppliers.filter(s =>
+            s.name.toLowerCase().includes(q) ||
+            s.locations.some(l => l.toLowerCase().includes(q)) ||
+            s.cert.toLowerCase().includes(q) ||
+            s.products.some(p => p.toLowerCase().includes(q))
+        );
+        renderTable(filtered);
+    }
+
+    // Detail panel
+    function showDetail(name) {
+        const s = suppliers.find(x => x.name === name);
+        if (!s) return;
+        const panel = document.getElementById('detailPanel');
+        panel.innerHTML = `
+            <h3>${s.name}</h3>
+            <p class="subtitle">${s.locations.join(' / ')}</p>
+            <div class="detail-section">
+                <h4>Certification</h4>
+                <div class="detail-row">
+                    <span class="label">Type</span>
+                    <span>${s.cert}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Status</span>
+                    <span class="cert-badge ${s.certStatus}">${s.certStatus.charAt(0).toUpperCase() + s.certStatus.slice(1)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Expires</span>
+                    <span>${formatDate(s.certExpires)}</span>
+                </div>
+            </div>
+            <div class="detail-section">
+                <h4>Products</h4>
+                ${s.products.map(p => `<span class="location-tag">${p}</span>`).join(' ')}
+            </div>
+            <div class="detail-section">
+                <h4>Delivery Info</h4>
+                <div class="detail-row">
+                    <span class="label">Last Delivery</span>
+                    <span>${formatDate(s.lastDelivery)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Avg Transit</span>
+                    <span>${s.avgDeliveryDays} day${s.avgDeliveryDays > 1 ? 's' : ''}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Total Orders</span>
+                    <span>${s.totalOrders}</span>
+                </div>
+            </div>
+            <div class="detail-section">
+                <h4>Contact</h4>
+                <div class="detail-row">
+                    <span>${s.contact}</span>
+                </div>
+            </div>
+        `;
+        document.getElementById('detailOverlay').classList.add('active');
+    }
+
+    function closeDetail(e) {
+        if (e.target === document.getElementById('detailOverlay')) {
+            document.getElementById('detailOverlay').classList.remove('active');
+        }
+    }
+
+    // View switching
+    function showView(id) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+
+    // Generate report mock
+    function generateReport() {
+        const btn = event.target;
+        btn.textContent = 'Generating...';
+        btn.style.opacity = '0.5';
+        setTimeout(() => {
+            btn.textContent = 'Report Generated (PDF)';
+            btn.style.color = '#16a34a';
+            btn.style.borderColor = '#16a34a';
+            setTimeout(() => {
+                btn.textContent = 'Generate Compliance Report (PDF)';
+                btn.style.color = '#16a34a';
+                btn.style.borderColor = '#d1fae5';
+                btn.style.opacity = '1';
+            }, 2000);
+        }, 1500);
+    }
+
+    // Initialize
+    renderTable(suppliers);
+</script>
+
+</body>
+</html>
